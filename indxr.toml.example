@@ -21,3 +21,11 @@ master_subtitle = "Comprehensive Topic Index Across All Books"
 
 # Customization for compact index
 compact_title = "SANS SEC504<br/>Compact Index"
+
+# Per-book color coding (optional)
+# Each book is automatically assigned a distinct, readable color from a built-in
+# palette. Override individual books here with hex colors keyed by book number.
+# [book_colors]
+# 1 = "#C0392B"
+# 2 = "#2980B9"
+# 3 = "#27AE60"

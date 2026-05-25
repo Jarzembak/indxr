@@ -67,6 +67,8 @@ def books(
 ):
     """Generate per-book content PDFs"""
 
+    book_colors = None
+
     # Load config if provided
     if config:
         with open(config, 'rb') as f:
@@ -76,6 +78,7 @@ def books(
         pattern = config_data.get('pattern', pattern)
         file_pattern = config_data.get('file_pattern', file_pattern)
         title_prefix = config_data.get('title_prefix', title_prefix)
+        book_colors = config_data.get('book_colors', book_colors)
 
     if not index_dir.exists():
         click.echo(f"Error: Index directory '{index_dir}' does not exist.", err=True)
@@ -106,7 +109,8 @@ def books(
             book_num,
             entries,
             str(output_dir),
-            title_prefix=title_prefix
+            title_prefix=title_prefix,
+            book_colors=book_colors
         )
         output_file = generator.generate()
         click.echo(f"  [OK] Created: {output_file} ({len(entries)} slides)\n")
@@ -171,6 +175,8 @@ def master(
 ):
     """Generate master index PDF with all tags"""
 
+    book_colors = None
+
     # Load config if provided
     if config:
         with open(config, 'rb') as f:
@@ -181,6 +187,7 @@ def master(
         file_pattern = config_data.get('file_pattern', file_pattern)
         title = config_data.get('master_title', title)
         subtitle = config_data.get('master_subtitle', subtitle)
+        book_colors = config_data.get('book_colors', book_colors)
 
     if not index_dir.exists():
         click.echo(f"Error: Index directory '{index_dir}' does not exist.", err=True)
@@ -209,7 +216,8 @@ def master(
         all_entries,
         str(output_dir),
         title=title,
-        subtitle=subtitle
+        subtitle=subtitle,
+        book_colors=book_colors
     )
 
     # Show statistics
@@ -272,6 +280,8 @@ def compact(
 ):
     """Generate compact two-column index PDF"""
 
+    book_colors = None
+
     # Load config if provided
     if config:
         with open(config, 'rb') as f:
@@ -281,6 +291,7 @@ def compact(
         pattern = config_data.get('pattern', pattern)
         file_pattern = config_data.get('file_pattern', file_pattern)
         title = config_data.get('compact_title', title)
+        book_colors = config_data.get('book_colors', book_colors)
 
     if not index_dir.exists():
         click.echo(f"Error: Index directory '{index_dir}' does not exist.", err=True)
@@ -305,7 +316,7 @@ def compact(
     click.echo("Generating compact two-column index PDF...")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    generator = CompactIndexGenerator(all_entries, str(output_dir), title=title)
+    generator = CompactIndexGenerator(all_entries, str(output_dir), title=title, book_colors=book_colors)
 
     # Show statistics
     stats = generator.get_statistics()
