@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import List
 
 from ..parser import SlideEntry
+from ..palette import book_color, book_color_hex, readable_text_color
 
 
 class BookPDFGenerator:
@@ -22,7 +23,8 @@ class BookPDFGenerator:
         book_number: int,
         entries: List[SlideEntry],
         output_dir: str = "output",
-        title_prefix: str = None
+        title_prefix: str = None,
+        book_colors: dict = None
     ):
         """
         Initialize generator
@@ -32,12 +34,16 @@ class BookPDFGenerator:
             entries: List of slide entries for this book
             output_dir: Directory to save PDF
             title_prefix: Optional prefix for title (e.g., "SANS SEC504", "Course XYZ")
+            book_colors: Optional mapping of book number -> hex color override
         """
         self.book_number = book_number
         self.entries = entries
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.title_prefix = title_prefix or "Study Material"
+        self.book_colors = book_colors
+        self.book_hex = book_color_hex(book_number, book_colors)
+        self.book_color = book_color(book_number, book_colors)
 
     def generate(self) -> str:
         """
@@ -72,7 +78,11 @@ class BookPDFGenerator:
             alignment=TA_CENTER
         )
 
-        title = Paragraph(f"{self.title_prefix} - Book {self.book_number} Contents", title_style)
+        title = Paragraph(
+            f'<font color="{self.book_hex}">•</font> '
+            f"{self.title_prefix} - Book {self.book_number} Contents",
+            title_style
+        )
         story.append(title)
         story.append(Spacer(1, 0.3*inch))
 
@@ -109,9 +119,9 @@ class BookPDFGenerator:
         table = Table(table_data, colWidths=col_widths, repeatRows=1)
 
         table.setStyle(TableStyle([
-            # Header styling
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498DB')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            # Header styling (themed with this book's color)
+            ('BACKGROUND', (0, 0), (-1, 0), self.book_color),
+            ('TEXTCOLOR', (0, 0), (-1, 0), readable_text_color(self.book_hex)),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
@@ -132,10 +142,12 @@ class BookPDFGenerator:
 
             # Grid
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#2980B9')),
 
             # Alternating row colors
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#ECF0F1')]),
+
+            # Book color accent: bar down the left edge of the whole table
+            ('LINEBEFORE', (0, 0), (0, -1), 5, self.book_color),
         ]))
 
         story.append(table)

@@ -16,6 +16,7 @@ from typing import List, Dict
 from collections import defaultdict
 
 from ..parser import SlideEntry
+from ..palette import book_color, build_legend
 
 
 class MasterIndexGenerator:
@@ -26,7 +27,8 @@ class MasterIndexGenerator:
         all_entries: Dict[int, List[SlideEntry]],
         output_dir: str = "output",
         title: str = None,
-        subtitle: str = None
+        subtitle: str = None,
+        book_colors: dict = None
     ):
         """
         Initialize generator
@@ -36,12 +38,14 @@ class MasterIndexGenerator:
             output_dir: Directory to save PDF
             title: Custom title (default: "Master Index")
             subtitle: Custom subtitle
+            book_colors: Optional mapping of book number -> hex color override
         """
         self.all_entries = all_entries
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.title = title or "Master Index"
         self.subtitle = subtitle or "Comprehensive Topic Index Across All Books"
+        self.book_colors = book_colors
         self.tag_index = self._build_tag_index()
 
     def _build_tag_index(self) -> Dict[str, List[SlideEntry]]:
@@ -165,8 +169,36 @@ class MasterIndexGenerator:
 
         stats = Paragraph(stats_text, stats_style)
         elements.append(stats)
+
+        # Book color key
+        elements.extend(self._create_color_legend(styles))
+
         elements.append(PageBreak())
 
+        return elements
+
+    def _create_color_legend(self, styles) -> List:
+        """Create a 'Book Color Key' mapping each book to its swatch color"""
+        book_numbers = sorted(self.all_entries.keys())
+        if not book_numbers:
+            return []
+
+        legend_title_style = ParagraphStyle(
+            'LegendTitle',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.HexColor('#34495E'),
+            alignment=TA_CENTER,
+            spaceBefore=30,
+            spaceAfter=10,
+            fontName='Helvetica-Bold'
+        )
+
+        elements = [
+            Spacer(1, 0.4 * inch),
+            Paragraph("Book Color Key", legend_title_style),
+            build_legend(book_numbers, self.book_colors),
+        ]
         return elements
 
     def _create_tag_section(self, tag: str, entries: List[SlideEntry], styles) -> List:
@@ -190,30 +222,39 @@ class MasterIndexGenerator:
             tag_style
         )
 
-        # Create table for entries
+        # Create table for entries (first column is a per-book color swatch)
         table_data = []
         for entry in entries:
             location = f"Book {entry.book_number}, Page {entry.page_number}"
-            table_data.append([location, entry.slide_title])
+            table_data.append(["", location, entry.slide_title])
 
-        col_widths = [1.5*inch, 5*inch]
+        col_widths = [0.12*inch, 1.5*inch, 4.88*inch]
         table = Table(table_data, colWidths=col_widths)
 
-        table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        style_cmds = [
             ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('ALIGN', (2, 0), (2, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (2, 0), (2, -1), 'Helvetica'),
+            ('FONTSIZE', (1, 0), (-1, -1), 9),
+            ('LEFTPADDING', (0, 0), (0, -1), 0),
+            ('RIGHTPADDING', (0, 0), (0, -1), 0),
+            ('LEFTPADDING', (1, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (1, 0), (-1, -1), 6),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.HexColor('#E0E0E0')),
-            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#34495E')),
-            ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#2C3E50')),
-        ]))
+            ('LINEBELOW', (1, 0), (-1, -1), 0.5, colors.HexColor('#E0E0E0')),
+            ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#34495E')),
+            ('TEXTCOLOR', (2, 0), (2, -1), colors.HexColor('#2C3E50')),
+        ]
+        # Color each swatch cell by its entry's book.
+        for row_idx, entry in enumerate(entries):
+            style_cmds.append(
+                ('BACKGROUND', (0, row_idx), (0, row_idx),
+                 book_color(entry.book_number, self.book_colors))
+            )
+        table.setStyle(TableStyle(style_cmds))
 
         tag_section = KeepTogether([tag_heading, table, Spacer(1, 0.15*inch)])
         elements.append(tag_section)

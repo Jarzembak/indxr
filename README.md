@@ -7,6 +7,7 @@ A flexible tool for generating indexed study materials from markdown files. Perf
 - **Per-Book PDFs**: Generate individual content tables for each book
 - **Master Index**: Comprehensive alphabetical index of all tags across all books
 - **Compact Index**: Two-column quick reference with B#:P# notation
+- **Per-Book Color Coding**: Each book gets its own readable color, with swatches and a color key across all PDFs
 - **Configurable**: Custom titles, patterns, and file locations
 - **Easy to Use**: Run with `uvx` - no installation required!
 - **Obsidian-Friendly**: Perfect workflow for taking notes in Obsidian
@@ -170,6 +171,30 @@ Use with `-c` flag:
 ```bash
 indxr all -c indxr.toml
 ```
+
+### Per-Book Color Coding
+
+Every book is automatically assigned its own distinct color from a built-in
+palette, applied consistently across all generated PDFs:
+
+- **Per-book PDFs**: the table header is themed with the book's color and a
+  matching color bar runs down the left edge.
+- **Master index**: each entry has a color swatch in the leftmost column.
+- **Compact index**: each `B#:P#` reference is prefixed with a small color swatch.
+- **Master & compact** index title pages include a **Book Color Key** legend.
+
+Colors are chosen to stay readable next to black text and never wash it out. To
+override the color for specific books, add a `book_colors` table to your
+`indxr.toml`, keyed by book number with hex values:
+
+```toml
+[book_colors]
+1 = "#C0392B"
+2 = "#2980B9"
+3 = "#27AE60"
+```
+
+Any book not listed falls back to the default palette.
 
 ## Input Format
 

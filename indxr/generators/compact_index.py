@@ -16,6 +16,7 @@ from typing import List, Dict
 from collections import defaultdict
 
 from ..parser import SlideEntry
+from ..palette import book_color_hex, build_legend
 
 
 class CompactIndexGenerator:
@@ -25,7 +26,8 @@ class CompactIndexGenerator:
         self,
         all_entries: Dict[int, List[SlideEntry]],
         output_dir: str = "output",
-        title: str = None
+        title: str = None,
+        book_colors: dict = None
     ):
         """
         Initialize generator
@@ -34,11 +36,13 @@ class CompactIndexGenerator:
             all_entries: Dictionary of book_number -> list of SlideEntry
             output_dir: Directory to save PDF
             title: Custom title (default: "Compact Index")
+            book_colors: Optional mapping of book number -> hex color override
         """
         self.all_entries = all_entries
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.title = title or "Compact Index"
+        self.book_colors = book_colors
         self.tag_index = self._build_tag_index()
 
     def _build_tag_index(self) -> Dict[str, List[SlideEntry]]:
@@ -202,6 +206,24 @@ class CompactIndexGenerator:
 
         format_explain = Paragraph(format_text, format_style)
         elements.append(format_explain)
+
+        # Book color key
+        book_numbers = sorted(self.all_entries.keys())
+        if book_numbers:
+            legend_title_style = ParagraphStyle(
+                'CompactLegendTitle',
+                parent=styles['Normal'],
+                fontSize=10,
+                textColor=colors.HexColor('#34495E'),
+                alignment=TA_CENTER,
+                spaceBefore=15,
+                spaceAfter=8,
+                fontName='Helvetica-Bold'
+            )
+            elements.append(Spacer(1, 0.2 * inch))
+            elements.append(Paragraph("Book Color Key", legend_title_style))
+            elements.append(build_legend(book_numbers, self.book_colors))
+
         elements.append(PageBreak())
 
         return elements
@@ -235,9 +257,16 @@ class CompactIndexGenerator:
         # Remove the # from tag for display
         tag_display = tag if not tag.startswith('#') else tag[1:]
 
-        # Create compact location references: B1:6, B1:10, B2:15
-        locations = [f"B{entry.book_number}:{entry.page_number}" for entry in entries]
-        location_text = ", ".join(locations)
+        # Create compact location references with a per-book color swatch:
+        # •B1:6, •B1:10, •B2:15 (swatch colored by book, text stays black)
+        location_parts = []
+        for entry in entries:
+            swatch = (
+                f'<font color="{book_color_hex(entry.book_number, self.book_colors)}">'
+                f'•</font>'
+            )
+            location_parts.append(f"{swatch}B{entry.book_number}:{entry.page_number}")
+        location_text = ", ".join(location_parts)
 
         # Add tag heading
         tag_para = Paragraph(f"<b>{tag_display}</b>", tag_style)
