@@ -251,7 +251,7 @@ class CompactIndexGenerator:
             fontName='Helvetica',
             spaceAfter=3,
             leftIndent=10,
-            leading=10
+            leading=18  # roomier line height to fit the enlarged swatches
         )
 
         # Remove the # from tag for display
@@ -261,9 +261,10 @@ class CompactIndexGenerator:
         # •B1:6, •B1:10, •B2:15 (swatch colored by book, text stays black)
         location_parts = []
         for entry in entries:
+            # Enlarged swatch (~2.5x the 8pt body text) for high visibility.
             swatch = (
-                f'<font color="{book_color_hex(entry.book_number, self.book_colors)}">'
-                f'•</font>'
+                f'<font color="{book_color_hex(entry.book_number, self.book_colors)}" '
+                f'size="20">•</font>'
             )
             location_parts.append(f"{swatch}B{entry.book_number}:{entry.page_number}")
         location_text = ", ".join(location_parts)
