@@ -27,7 +27,8 @@ class CompactIndexGenerator:
         all_entries: Dict[int, List[SlideEntry]],
         output_dir: str = "output",
         title: str = None,
-        book_colors: dict = None
+        book_colors: dict = None,
+        use_color: bool = True
     ):
         """
         Initialize generator
@@ -37,12 +38,14 @@ class CompactIndexGenerator:
             output_dir: Directory to save PDF
             title: Custom title (default: "Compact Index")
             book_colors: Optional mapping of book number -> hex color override
+            use_color: Whether to apply per-book color coding (default True)
         """
         self.all_entries = all_entries
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.title = title or "Compact Index"
         self.book_colors = book_colors
+        self.use_color = use_color
         self.tag_index = self._build_tag_index()
 
     def _build_tag_index(self) -> Dict[str, List[SlideEntry]]:
@@ -207,9 +210,9 @@ class CompactIndexGenerator:
         format_explain = Paragraph(format_text, format_style)
         elements.append(format_explain)
 
-        # Book color key
+        # Book color key (only when color coding is enabled)
         book_numbers = sorted(self.all_entries.keys())
-        if book_numbers:
+        if self.use_color and book_numbers:
             legend_title_style = ParagraphStyle(
                 'CompactLegendTitle',
                 parent=styles['Normal'],
@@ -251,21 +254,26 @@ class CompactIndexGenerator:
             fontName='Helvetica',
             spaceAfter=3,
             leftIndent=10,
-            leading=18  # roomier line height to fit the enlarged swatches
+            # Roomier line height to fit the enlarged swatches when color is on.
+            leading=18 if self.use_color else 10
         )
 
         # Remove the # from tag for display
         tag_display = tag if not tag.startswith('#') else tag[1:]
 
-        # Create compact location references with a per-book color swatch:
-        # •B1:6, •B1:10, •B2:15 (swatch colored by book, text stays black)
+        # Create compact location references. With color enabled, each B#:P#
+        # reference is prefixed by an enlarged, per-book color swatch:
+        # •B1:6, •B1:10, •B2:15 (swatch colored by book, text stays black).
         location_parts = []
         for entry in entries:
-            # Enlarged swatch (~2.5x the 8pt body text) for high visibility.
-            swatch = (
-                f'<font color="{book_color_hex(entry.book_number, self.book_colors)}" '
-                f'size="20">•</font>'
-            )
+            if self.use_color:
+                # Enlarged swatch (~2.5x the 8pt body text) for high visibility.
+                swatch = (
+                    f'<font color="{book_color_hex(entry.book_number, self.book_colors)}" '
+                    f'size="20">•</font>'
+                )
+            else:
+                swatch = ""
             location_parts.append(f"{swatch}B{entry.book_number}:{entry.page_number}")
         location_text = ", ".join(location_parts)
 

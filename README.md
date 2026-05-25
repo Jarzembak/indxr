@@ -133,6 +133,7 @@ All commands support these common options:
 - `-p, --pattern TEXT` - Custom regex pattern for parsing entries
 - `--file-pattern TEXT` - Glob pattern for finding index files (default: `Book * Index.md`)
 - `-c, --config PATH` - Path to config file (TOML format)
+- `--color / --no-color` - Enable or disable per-book color coding (default: enabled). Use `--no-color` for plain monochrome PDFs.
 
 Additional options per command:
 
@@ -195,6 +196,16 @@ override the color for specific books, add a `book_colors` table to your
 ```
 
 Any book not listed falls back to the default palette.
+
+#### Disabling color
+
+Color coding is on by default. To generate plain, monochrome PDFs (no swatches,
+color bars, or color key), pass `--no-color` to any command:
+
+```bash
+indxr all --no-color -i Cards/Index -o output
+indxr compact --no-color -i Cards/Index -o output
+```
 
 ## Input Format
 
