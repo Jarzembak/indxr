@@ -28,7 +28,8 @@ class MasterIndexGenerator:
         output_dir: str = "output",
         title: str = None,
         subtitle: str = None,
-        book_colors: dict = None
+        book_colors: dict = None,
+        use_color: bool = True
     ):
         """
         Initialize generator
@@ -39,6 +40,7 @@ class MasterIndexGenerator:
             title: Custom title (default: "Master Index")
             subtitle: Custom subtitle
             book_colors: Optional mapping of book number -> hex color override
+            use_color: Whether to apply per-book color coding (default True)
         """
         self.all_entries = all_entries
         self.output_dir = Path(output_dir)
@@ -46,6 +48,7 @@ class MasterIndexGenerator:
         self.title = title or "Master Index"
         self.subtitle = subtitle or "Comprehensive Topic Index Across All Books"
         self.book_colors = book_colors
+        self.use_color = use_color
         self.tag_index = self._build_tag_index()
 
     def _build_tag_index(self) -> Dict[str, List[SlideEntry]]:
@@ -170,8 +173,9 @@ class MasterIndexGenerator:
         stats = Paragraph(stats_text, stats_style)
         elements.append(stats)
 
-        # Book color key
-        elements.extend(self._create_color_legend(styles))
+        # Book color key (only when color coding is enabled)
+        if self.use_color:
+            elements.extend(self._create_color_legend(styles))
 
         elements.append(PageBreak())
 
@@ -222,39 +226,64 @@ class MasterIndexGenerator:
             tag_style
         )
 
-        # Create table for entries (first column is a per-book color swatch)
-        table_data = []
-        for entry in entries:
-            location = f"Book {entry.book_number}, Page {entry.page_number}"
-            table_data.append(["", location, entry.slide_title])
+        if self.use_color:
+            # First column is a per-book color swatch.
+            table_data = []
+            for entry in entries:
+                location = f"Book {entry.book_number}, Page {entry.page_number}"
+                table_data.append(["", location, entry.slide_title])
 
-        col_widths = [0.12*inch, 1.5*inch, 4.88*inch]
-        table = Table(table_data, colWidths=col_widths)
+            col_widths = [0.12*inch, 1.5*inch, 4.88*inch]
+            table = Table(table_data, colWidths=col_widths)
 
-        style_cmds = [
-            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
-            ('ALIGN', (2, 0), (2, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (2, 0), (2, -1), 'Helvetica'),
-            ('FONTSIZE', (1, 0), (-1, -1), 9),
-            ('LEFTPADDING', (0, 0), (0, -1), 0),
-            ('RIGHTPADDING', (0, 0), (0, -1), 0),
-            ('LEFTPADDING', (1, 0), (-1, -1), 6),
-            ('RIGHTPADDING', (1, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ('LINEBELOW', (1, 0), (-1, -1), 0.5, colors.HexColor('#E0E0E0')),
-            ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#34495E')),
-            ('TEXTCOLOR', (2, 0), (2, -1), colors.HexColor('#2C3E50')),
-        ]
-        # Color each swatch cell by its entry's book.
-        for row_idx, entry in enumerate(entries):
-            style_cmds.append(
-                ('BACKGROUND', (0, row_idx), (0, row_idx),
-                 book_color(entry.book_number, self.book_colors))
-            )
-        table.setStyle(TableStyle(style_cmds))
+            style_cmds = [
+                ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+                ('ALIGN', (2, 0), (2, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (2, 0), (2, -1), 'Helvetica'),
+                ('FONTSIZE', (1, 0), (-1, -1), 9),
+                ('LEFTPADDING', (0, 0), (0, -1), 0),
+                ('RIGHTPADDING', (0, 0), (0, -1), 0),
+                ('LEFTPADDING', (1, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (1, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LINEBELOW', (1, 0), (-1, -1), 0.5, colors.HexColor('#E0E0E0')),
+                ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#34495E')),
+                ('TEXTCOLOR', (2, 0), (2, -1), colors.HexColor('#2C3E50')),
+            ]
+            # Color each swatch cell by its entry's book.
+            for row_idx, entry in enumerate(entries):
+                style_cmds.append(
+                    ('BACKGROUND', (0, row_idx), (0, row_idx),
+                     book_color(entry.book_number, self.book_colors))
+                )
+            table.setStyle(TableStyle(style_cmds))
+        else:
+            # No color: plain two-column location/title table.
+            table_data = []
+            for entry in entries:
+                location = f"Book {entry.book_number}, Page {entry.page_number}"
+                table_data.append([location, entry.slide_title])
+
+            col_widths = [1.5*inch, 5*inch]
+            table = Table(table_data, colWidths=col_widths)
+            table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.HexColor('#E0E0E0')),
+                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#34495E')),
+                ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#2C3E50')),
+            ]))
 
         tag_section = KeepTogether([tag_heading, table, Spacer(1, 0.15*inch)])
         elements.append(tag_section)

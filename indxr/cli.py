@@ -58,13 +58,19 @@ def main():
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help='Path to config file (TOML format)'
 )
+@click.option(
+    '--color/--no-color',
+    default=True,
+    help='Enable per-book color coding (default: enabled)'
+)
 def books(
     index_dir: Path,
     output_dir: Path,
     pattern: Optional[str],
     file_pattern: str,
     title_prefix: Optional[str],
-    config: Optional[Path]
+    config: Optional[Path],
+    color: bool
 ):
     """Generate per-book content PDFs"""
 
@@ -111,7 +117,8 @@ def books(
             entries,
             str(output_dir),
             title_prefix=title_prefix,
-            book_colors=book_colors
+            book_colors=book_colors,
+            use_color=color
         )
         output_file = generator.generate()
         click.echo(f"  [OK] Created: {output_file} ({len(entries)} slides)\n")
@@ -164,6 +171,11 @@ def books(
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help='Path to config file (TOML format)'
 )
+@click.option(
+    '--color/--no-color',
+    default=True,
+    help='Enable per-book color coding (default: enabled)'
+)
 def master(
     index_dir: Path,
     output_dir: Path,
@@ -172,7 +184,8 @@ def master(
     title: Optional[str],
     subtitle: Optional[str],
     top_tags: int,
-    config: Optional[Path]
+    config: Optional[Path],
+    color: bool
 ):
     """Generate master index PDF with all tags"""
 
@@ -218,7 +231,8 @@ def master(
         str(output_dir),
         title=title,
         subtitle=subtitle,
-        book_colors=book_colors
+        book_colors=book_colors,
+        use_color=color
     )
 
     # Show statistics
@@ -271,13 +285,19 @@ def master(
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help='Path to config file (TOML format)'
 )
+@click.option(
+    '--color/--no-color',
+    default=True,
+    help='Enable per-book color coding (default: enabled)'
+)
 def compact(
     index_dir: Path,
     output_dir: Path,
     pattern: Optional[str],
     file_pattern: str,
     title: Optional[str],
-    config: Optional[Path]
+    config: Optional[Path],
+    color: bool
 ):
     """Generate compact two-column index PDF"""
 
@@ -317,7 +337,7 @@ def compact(
     click.echo("Generating compact two-column index PDF...")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    generator = CompactIndexGenerator(all_entries, str(output_dir), title=title, book_colors=book_colors)
+    generator = CompactIndexGenerator(all_entries, str(output_dir), title=title, book_colors=book_colors, use_color=color)
 
     # Show statistics
     stats = generator.get_statistics()
@@ -349,7 +369,12 @@ def compact(
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help='Path to config file (TOML format)'
 )
-def all(index_dir: Path, output_dir: Path, config: Optional[Path]):
+@click.option(
+    '--color/--no-color',
+    default=True,
+    help='Enable per-book color coding (default: enabled)'
+)
+def all(index_dir: Path, output_dir: Path, config: Optional[Path], color: bool):
     """Generate all PDFs (books, master index, and compact index)"""
 
     click.echo("=" * 70)
@@ -365,7 +390,7 @@ def all(index_dir: Path, output_dir: Path, config: Optional[Path]):
     click.echo("=" * 70)
     click.echo()
     ctx.invoke(books, index_dir=index_dir, output_dir=output_dir, pattern=None,
-               file_pattern='Book * Index.md', title_prefix=None, config=config)
+               file_pattern='Book * Index.md', title_prefix=None, config=config, color=color)
 
     click.echo()
     click.echo("=" * 70)
@@ -373,7 +398,7 @@ def all(index_dir: Path, output_dir: Path, config: Optional[Path]):
     click.echo("=" * 70)
     click.echo()
     ctx.invoke(master, index_dir=index_dir, output_dir=output_dir, pattern=None,
-               file_pattern='Book * Index.md', title=None, subtitle=None, top_tags=10, config=config)
+               file_pattern='Book * Index.md', title=None, subtitle=None, top_tags=10, config=config, color=color)
 
     click.echo()
     click.echo("=" * 70)
@@ -381,7 +406,7 @@ def all(index_dir: Path, output_dir: Path, config: Optional[Path]):
     click.echo("=" * 70)
     click.echo()
     ctx.invoke(compact, index_dir=index_dir, output_dir=output_dir, pattern=None,
-               file_pattern='Book * Index.md', title=None, config=config)
+               file_pattern='Book * Index.md', title=None, config=config, color=color)
 
     click.echo()
     click.echo("=" * 70)
