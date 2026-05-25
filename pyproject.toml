@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "indxr"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A flexible tool for generating indexed study materials from markdown files"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -37,6 +37,9 @@ dev = [
     "ruff>=0.1.0",
 ]
 
+[tool.hatch.version]
+path = "indxr/__init__.py"
+
 [project.scripts]
 indxr = "indxr.cli:main"
 
@@ -44,5 +47,5 @@ indxr = "indxr.cli:main"
 Homepage = "https://github.com/jlgore/indxr"
 Issues = "https://github.com/jlgore/indxr/issues"
 
-[tool.hatchling.build.targets.wheel]
+[tool.hatch.build.targets.wheel]
 packages = ["indxr"]
