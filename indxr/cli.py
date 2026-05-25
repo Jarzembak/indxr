@@ -12,12 +12,13 @@ try:
 except ImportError:
     import tomli as tomllib
 
+from . import __version__
 from .parser import IndexParser
 from .generators import BookPDFGenerator, MasterIndexGenerator, CompactIndexGenerator
 
 
 @click.group()
-@click.version_option()
+@click.version_option(version=__version__, prog_name="indxr")
 def main():
     """indxr - Generate indexed study materials from markdown files"""
     pass
