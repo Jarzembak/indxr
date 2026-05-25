@@ -2,6 +2,17 @@
 
 A flexible tool for generating indexed study materials from markdown files. Perfect for creating study guides, course indexes, and exam preparation materials.
 
+> **This is a fork** of [jlgore/indxr](https://github.com/jlgore/indxr) with added per-book color coding and a few related conveniences. The commands below install from this fork (`Jarzembak/indxr`).
+
+## Fork Additions
+
+This fork extends the original with:
+
+- **Per-book color coding** — each book is automatically assigned a distinct, readable color, shown as swatches and color bars across the per-book, master, and compact PDFs, with a "Book Color Key" legend on the index title pages. See [Per-Book Color Coding](#per-book-color-coding).
+- **`--color / --no-color` toggle** — turn color coding on or off per run (on by default); `--no-color` produces plain monochrome PDFs.
+- **Custom book colors** — override individual book colors via a `book_colors` table in `indxr.toml`.
+- **Versioning & changelog** — releases are versioned and recorded in [CHANGELOG.md](CHANGELOG.md), and can be installed by tag (see [Upgrading](#upgrading)).
+
 ## Features
 
 - **Per-Book PDFs**: Generate individual content tables for each book
@@ -40,7 +51,7 @@ Book 1, Page 15, Slide: "Common Vulnerabilities" #vulnerabilities #OWASP #web-se
 
 ```bash
 cd /path/to/your/obsidian/vault
-uvx --from git+https://github.com/jlgore/indxr indxr all -i SEC504/Index -o SEC504/PDFs
+uvx --from git+https://github.com/Jarzembak/indxr indxr all -i SEC504/Index -o SEC504/PDFs
 ```
 
 5. **Done!** You now have professional PDF study guides
@@ -67,23 +78,23 @@ Run indxr without installation using `uvx`:
 
 ```bash
 # Generate all PDFs
-uvx --from git+https://github.com/jlgore/indxr indxr all
+uvx --from git+https://github.com/Jarzembak/indxr indxr all
 
 # Generate just book PDFs
-uvx --from git+https://github.com/jlgore/indxr indxr books
+uvx --from git+https://github.com/Jarzembak/indxr indxr books
 
 # Generate master index
-uvx --from git+https://github.com/jlgore/indxr indxr master
+uvx --from git+https://github.com/Jarzembak/indxr indxr master
 
 # Generate compact index
-uvx --from git+https://github.com/jlgore/indxr indxr compact
+uvx --from git+https://github.com/Jarzembak/indxr indxr compact
 ```
 
 ### Using pip
 
 ```bash
 # Install from GitHub
-pip install git+https://github.com/jlgore/indxr
+pip install git+https://github.com/Jarzembak/indxr
 
 # Or install locally for development
 cd indxr
@@ -94,6 +105,38 @@ indxr all
 indxr books
 indxr master
 indxr compact
+```
+
+## Upgrading
+
+How you update depends on how you installed indxr.
+
+### If you installed with pip
+
+Upgrade to the latest version on `main`:
+
+```bash
+pip install --upgrade "git+https://github.com/Jarzembak/indxr"
+```
+
+Or pin a specific released version (see [tags](https://github.com/Jarzembak/indxr/tags)):
+
+```bash
+pip install --upgrade "git+https://github.com/Jarzembak/indxr@v0.3.0"
+```
+
+Check what you currently have installed with:
+
+```bash
+indxr --version
+```
+
+### If you run with uvx
+
+`uvx` runs indxr on demand instead of keeping an installed copy, so there's nothing to "upgrade" — but uv may reuse a cached build of the git source. To force it to fetch the latest code, add `--refresh`:
+
+```bash
+uvx --refresh --from git+https://github.com/Jarzembak/indxr indxr all
 ```
 
 ## Usage
@@ -237,12 +280,12 @@ indxr all -p "Chapter\s+(\d+),\s+Section\s+(\d+),\s+Title:\s+\"([^\"]+)\"\s+(#[\
 
 ```bash
 # Generate all PDFs for SANS SEC504
-uvx --from git+https://github.com/jlgore/indxr indxr all \
+uvx --from git+https://github.com/Jarzembak/indxr indxr all \
   -i ~/SANS/SEC504/Cards/Index \
   -o ~/SANS/SEC504/output
 
 # Generate just the compact index for quick reference
-uvx --from git+https://github.com/jlgore/indxr indxr compact \
+uvx --from git+https://github.com/Jarzembak/indxr indxr compact \
   -i ~/SANS/SEC504/Cards/Index \
   -o ~/SANS/SEC504/output \
   --title "SEC504 Quick Reference"
@@ -271,7 +314,7 @@ title_prefix = "My Course"
 EOF
 
 # Run with config
-uvx --from git+https://github.com/jlgore/indxr indxr all -c indxr.toml
+uvx --from git+https://github.com/Jarzembak/indxr indxr all -c indxr.toml
 ```
 
 ## Development
@@ -279,7 +322,7 @@ uvx --from git+https://github.com/jlgore/indxr indxr all -c indxr.toml
 ### Setup
 
 ```bash
-git clone https://github.com/jlgore/indxr
+git clone https://github.com/Jarzembak/indxr
 cd indxr
 pip install -e ".[dev]"
 ```
