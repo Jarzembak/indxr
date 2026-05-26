@@ -22,7 +22,7 @@ DEFAULT_PALETTE: List[str] = [
     "#27AE60",  # green
     "#8E44AD",  # purple
     "#F1C40F",  # yellow
-    "#16A085",  # teal
+    "#E84393",  # pink
     "#2C3E50",  # navy
     "#C2185B",  # magenta
     "#B7950B",  # gold
